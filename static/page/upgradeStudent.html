@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">用户姓名</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="name" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+
+
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary" lay-submit
+                                    lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加</button>
+                <button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete"> 删除</button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+        </script>
+
+    </div>
+</div>
+<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+
+        table.render({
+            elem: '#currentTableId',
+            url: '/upgradeStudent/getUpgradeStudent',
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [[
+                {type: "checkbox", width: 50},
+                {field: 'pk', width: 200, title: 'ID', sort: true},
+                {
+                    field: 'fields["stuId"]', width: 100, title: '学号', templet(res) {
+                        return res.fields.stuId
+                    }
+                },
+                {
+                    field: 'fields.name', width: 100, title: '姓名', sort: true, templet(res) {
+                        return res.fields.name
+                    }
+                },
+                {
+                    field: 'fields.password', width: 100, title: '升学时间', templet(res) {
+                        return res.fields.upgrade_time
+                    }
+                },
+                {
+                    field: 'fields.college', title: '创建时间', templet(res) {
+                        return res.fields.create_time
+                    }
+                },
+                ,
+                {
+                    field: 'fields.speciality', title: '修改时间', templet(res) {
+                        return res.fields.update_time
+                    }
+                },
+                {title: '操作', toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 15,
+            page: true,
+            skin: 'line',
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            //执行搜索重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                }
+                , where: data.field
+            }, 'data');
+
+            return false;
+        });
+
+        /**
+         * toolbar监听事件
+         */
+        let checker;
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {  // 监听添加操作
+                var index = layer.open({
+                    title: '添加学生',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: '../page/upgradeStudent/add.html',
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+            } else if (obj.event === 'delete') {  // 监听删除操作
+                var checkStatus = table.checkStatus('currentTableId')
+                    , data = checkStatus.data;
+                var flag = layer.confirm('是否确认删除？', {
+                    btn: ['确认', '取消']
+                }, function (index, layero) {
+                    let arr = [];
+                    data.forEach(tt => {
+                        arr.push(tt.pk)
+                    })
+                    $.post("/upgradeStudent/deleted", {"ids": JSON.stringify(arr)}, function (data) {
+                        if (data.code == '0') {
+                            layer.msg('删除成功')
+                            table.reload('currentTableId', {
+                                page: {
+                                    curr: 1
+                                }
+                            }, 'data');
+                        } else {
+                            layer.msg(data.msg)
+                        }
+                        layer.close(index)
+                    })
+                }, function (index) {
+                    layer.close(index)
+                });
+
+                console.log(flag);
+
+            }
+        });
+
+        //监听表格复选框选择
+        table.on('checkbox(currentTableFilter)', function (obj) {
+            checker = obj;
+        });
+
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'edit') {
+
+                var index = layer.open({
+                    title: '编辑',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: '../page/upgradeStudent/edit.html',
+                    success: function (layero, index) {
+                        var body = layer.getChildFrame('body', index);
+                        body.find("[name='id']").val(data.pk);
+                        body.find("[name='name']").val(data.fields.name);
+                        body.find("[name='upgrade_time']").val(data.fields.upgrade_time);
+                        /*
+                        body.find("[name='id']").val(data.pk);//回显账户
+                        body.find("[name='grade']").val(data.fields.grade);//回显账户
+                        body.find("[name='poor_number']").val(data.fields.poor_number);//回显姓名
+                        body.find("[name='student_id']").val(data.fields.student_id);//回显姓名
+                        body.find("[name='create_time']").val(data.fields.create_time);//回显姓名
+                        body.find("[name='update_time']").val(data.fields.update_time);//回显姓名
+                         */
+
+                    }
+                });
+                $(window).on("resize", function () {
+                    layer.full(index)
+                });
+                return false;
+            } else if (obj.event === 'delete') {
+                layer.confirm('真的删除行么', function (index) {
+                    $.post("/upgradeStudent/deleted", {"ids": `[${data.pk}]`}, function (data) {
+                        if (data.code === 0) {
+                            layer.msg(data.msg)
+                            obj.del();
+                            layer.close(index)
+                        } else {
+                            layer.msg(data.msg)
+                        }
+                    })
+                });
+            }
+        });
+
+    });
+</script>
+
+</body>
+</html>

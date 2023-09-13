@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form">
+    <input type="email" name="id" style="display: none" value="" class="layui-input">
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">学号</label>
+        <div class="layui-input-block">
+            <input type="number" name="stuId" disabled lay-verify="required" lay-reqtext="学号不能为空" placeholder="请输入学号"
+                   value="" class="layui-input">
+            <tip>学生学号不能修改</tip>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">姓名</label>
+        <div class="layui-input-block">
+            <input type="text" name="name" lay-verify="required" lay-reqtext="姓名不能为空" placeholder="请输入用户姓名" value=""
+                   class="layui-input">
+
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">密码</label>
+        <div class="layui-input-block">
+            <input type="text" name="password" placeholder="需重置，才输入" value="" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">已修学分</label>
+        <div class="layui-input-block">
+            <input type="text" name="s1" lay-verify="required" lay-reqtext="已修学分不能为空" value=""
+                   class="layui-input">
+
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">未修学分</label>
+        <div class="layui-input-block">
+            <input type="text" name="s2" lay-verify="required" lay-reqtext="未修学分不能为空" value=""
+                   class="layui-input">
+
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">必修学分</label>
+        <div class="layui-input-block">
+            <input type="text" name="s3" lay-verify="required" lay-reqtext="必修学分不能为空" value=""
+                   class="layui-input">
+
+        </div>
+    </div>
+        <div class="layui-form-item">
+        <label class="layui-form-label required">学院</label>
+        <div class="layui-input-block">
+            <input type="text" name="college" lay-verify="required" lay-reqtext="学院不能为空" value=""
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">专业</label>
+        <div class="layui-input-block">
+            <input type="text" name="speciality" lay-verify="required" lay-reqtext="专业" value=""
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
+
+
+         $.ajaxSettings.async = false
+            $.get('/student/getById',{'id':sessionStorage.getItem("id")},response=>{
+                let data = response.data[0]
+                if (response.code ==0){
+                        $("[name='id']").val(data.pk);//回显账户
+                        $("[name='stuId']").val(data.fields.stuId);//回显账户
+                        $("[name='name']").val(data.fields.name);//回显姓名
+                        $("[name='s1']").val(data.fields.s1);//回显姓名
+                        $("[name='s2']").val(data.fields.s2);//回显姓名
+                        $("[name='s3']").val(data.fields.s3);//回显姓名
+                        $("[name='college']").val(data.fields.college);//回显姓名
+                        $("[name='speciality']").val(data.fields.speciality);//回显姓名
+                }else {
+                    layer.msg(response.msg)
+                }
+            })
+
+         $.ajaxSettings.async = true
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            data.field.id = sessionStorage.getItem("id")
+            $.post("/student/updateById", data.field, function (data) {
+                if (data.code == '0') {
+                    // 关闭弹出层
+                    layer.msg(data.msg)
+                } else {
+                    layer.msg(data.msg)
+                }
+            })
+            return false;
+        });
+
+
+    });
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="ct1"></div>
+</body>
+<script src="../lib/jquery-3.4.1/jquery-3.4.1.min.js"></script>
+<script>
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const stuId1 = urlParams.get('stuId'); // 'home'
+    var stuId = sessionStorage.getItem("studentId");
+    var id = sessionStorage.getItem("id");
+    var tt = $('#ct1');
+
+    if (id != null && stuId != null) {
+        var stu = {
+            "id": id,
+            "stuId": stuId
+        }
+        $.get("/topic/getTopicByStuId", stu, (res) => {
+            tt.empty()
+            tt.append(res.data[0].fields.content)
+
+        })
+    } else {
+        $.get("/topic/getByStuId", {"id": id}, (res) => {
+            tt.empty()
+            tt.append(res.data[0].fields.content)
+
+        })
+    }
+
+
+</script>
+</html>

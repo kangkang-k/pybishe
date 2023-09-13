@@ -1,0 +1,51 @@
+{
+  "homeInfo": {
+    "title": "学生选题",
+    "href": "page/topic.html"
+  },
+  "logoInfo": {
+    "title": "毕业设计管理系统",
+    "image": "images/logo.png",
+    "href": ""
+  },
+  "menuInfo": [
+    {
+      "title": "常规管理",
+      "icon": "fa fa-address-book",
+      "href": "",
+      "target": "_self",
+      "child": [
+        {
+          "title": "学生选题",
+          "href": "page/topic.html",
+          "icon": "fa fa-window-maximize",
+          "target": "_self"
+        },
+        {
+          "title": "教师基础信息",
+          "href": "page/tableTeacher.html",
+          "icon": "fa fa-gears",
+          "target": "_self"
+        },
+        {
+          "title": "学生基础信息",
+          "href": "page/table.html",
+          "icon": "fa fa-file-text",
+          "target": "_self"
+        },
+        {
+          "title": "管理员信息",
+          "href": "page/admin_index.html",
+          "icon": "fa fa-file-text",
+          "target": "_self"
+        },
+        {
+          "title": "签到管理",
+          "href": "page/attendanceTable.html",
+          "icon": "fa fa-file-text",
+          "target": "_self"
+        }
+      ]
+    }
+  ]
+}

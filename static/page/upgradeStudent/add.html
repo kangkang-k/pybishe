@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form">
+     <div class="layui-form-item">
+        <label class="layui-form-label required">学生</label>
+        <div class="layui-input-block">
+            <select name="name" id="student" lay-verify="required">
+
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">升学年份</label>
+        <div class="layui-input-block">
+            <input type="text" name="upgrade_time" id="test1" lay-verify="required" lay-reqtext="升学时间不能为空" placeholder="请选择时间" value=""
+                   class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+        </div>
+    </div>
+</div>
+<script src="../../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form','laydate'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            laydate = layui.laydate,
+            $ = layui.jquery;
+
+        laydate.render({
+            elem: '#test1', //指定元素
+            type :'year'
+        });
+
+        $.get('/student/getAllStudent',response=>{
+            if (response.code===0){
+                let list = response.data;
+                for (let i = 0; i < list.length; i++) {
+                    $("#student").append(`<option value="[${list[i].fields.stuId},'${list[i].fields.name}']">${list[i].fields.name}</option>`)
+                }
+                form.render();
+            }
+        })
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            ints =  eval(data.field.name)
+            data.field.stuId = ints[0]
+            data.field.name = ints[1]
+           $.post("/upgradeStudent/save", data.field, function (data1) {
+                if (data1.code == '0') {
+                    parent.layer.msg(data1.msg)
+                    // 关闭弹出层
+                    var iframeIndex = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(iframeIndex);
+                    parent.layui.table.reload('currentTableId', {
+                        page: {
+                            curr: 1
+                        }
+
+                    }, 'data');
+                } else {
+                    layer.alert(data1.msg)
+                }
+            });
+
+
+
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>系统设置</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+    <style>
+        .layui-form-item .layui-input-company {
+            width: auto;
+            padding-right: 10px;
+            line-height: 38px;
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <div class="layui-form layuimini-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label required">题目</label>
+                <div class="layui-input-block">
+                    <input type="text" name="title" id="title" lay-verify="required" lay-reqtext="题目不能为空"
+                           placeholder="请输入选题题目"
+                           value="" class="layui-input">
+                    <tip>选题请慎重，选题后不可修改</tip>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button type="button" class="layui-btn" id="upload">
+                        <i class="layui-word-aux">&#xe67c;</i>上传文件
+                    </button>
+                    <a id="download" class="layui-btn" href="">下载</a>
+                </div>
+            </div>
+            <h2>选题预览</h2>
+            <div class="layui-form-item" style="position: relative;z-index: 0">
+
+                <div id="editor" style="margin: 50px 0 50px 0">
+
+                </div>
+            </div>
+
+
+            <div class="layui-form-item" style="position: relative;z-index: 2;">
+                <label class="layui-form-label">选择导师</label>
+                <div class="layui-input-block">
+                    <select name="teacherId"  id="select" lay-verify="required" lay-reqtext="导师不能为空">
+                        <option value=""></option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <a id="commit" class="layui-btn layui-btn-normal">保存</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="../js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'jquery', 'wangEditor', 'upload'], function () {
+        var form = layui.form
+            , layer = layui.layer,
+            $ = layui.jquery,
+            wangEditor = layui.wangEditor,
+            upload = layui.upload;
+
+
+        upload.render({
+            elem: '#upload',
+            auto: false,//选择文件后不自动上传
+            accept: 'file',
+            url: '/topic/saveTopic',
+            field: 'files',
+            bindAction: '#commit',
+            //上传前的回调
+            before: function () {
+                this.data = {
+                    id: sessionStorage.getItem("id"),
+                    teacherId: $('[name="teacherId"]').val(),
+                    title: $('[name="title"]').val(),
+                    content: editor.txt.html(),
+                }
+            },
+            //操作成功的回调
+            done: function (res, index, upload) {
+                var code = res.code === 0 ? 1 : 2;
+                layer.alert(res.msg, {icon: code}, function () {
+                    parent.window.location.reload();
+                })
+            },
+            //上传错误回调
+            error: function (index, upload) {
+                layer.alert('上传失败！' + index);
+            }
+        });
+
+        $.ajaxSettings.async = false;
+        $.post("/teacher/list", function (response) {
+            response.data.forEach(item => {
+                $("#select").append(`<option value="${item.pk}">${item.fields.name}</option>`)
+            })
+            form.render();
+        })
+
+        var editor = new wangEditor('#editor');
+        editor.create();
+        $.get("/topic/getByStuId", {"id": sessionStorage.getItem("id")}, function (data) {
+            if (data.data.length != 0) {
+                $("#title").val(data.data[0].fields.title)
+                $("#select").val(data.data[0].fields.teacherId)
+                editor.txt.html(data.data[0].fields.content)
+                if (data.data[0].fields.topicFile){
+                    $("#download").attr("href",`/topic/download?id=${data.data[0].pk}`)
+                }else {
+                    $("#download").hide()
+                }
+                if (data.data[0].fields.status == 3) {
+                    layer.alert("设计被打回,请重新提交");
+                }else {
+                    $("#select").attr("disabled",true);
+                    $("#commit").hide();
+                    $("#title").attr("disabled",true);
+                    $("#upload").attr("disabled",true);
+                }
+            } else {
+                layer.msg("选题未提交")
+            }
+        })
+
+        $.ajaxSettings.async = true;
+        form.render();
+        editor.customConfig.uploadImgServer = "../api/upload.json";
+        editor.customConfig.uploadFileName = 'image';
+        editor.customConfig.pasteFilterStyle = false;
+        editor.customConfig.uploadImgMaxLength = 5;
+        editor.customConfig.customAlert = function (info) {
+            layer.msg(info);
+        };
+
+        //监听提交
+        form.on('submit(setting)', function (data) {
+            data.field.id = sessionStorage.getItem("id");
+            data.field.content = editor.txt.html();
+            $.post("/topic/saveTopic", data.field, function (data) {
+                if (data.code == '0') {
+                    layer.msg("选题成功")
+                } else {
+                    layer.msg(data.msg)
+                }
+            })
+
+            return false;
+        });
+    });
+</script>
+</body>
+</html>
